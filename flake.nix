@@ -1,11 +1,8 @@
 {
   description = "my flake";
-
-  # Add all your dependencies here
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-
     helix.url = "github:helix-editor/helix";
     helix.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -17,21 +14,12 @@
         pkgs = inputs.nixpkgs.legacyPackages.${system};
         inherit (pkgs) lib;
 
-        globalConfig = (pkgs.formats.toml { }).generate "helix.config.toml" {
-          theme = "modus_vivendi";
-        };
-
-        languagesConfig = (pkgs.formats.toml { }).generate "languages.config.toml" {
-          language = [
-            {
-              name = "nix";
-              formatter = {
-                command = "${lib.getExe pkgs.nixfmt-rfc-style}";
-              };
-              auto-format = true;
-            }
-          ];
-        };
+        globalConfig = (pkgs.formats.toml { }).generate "helix.config.toml" (
+          import ./config.nix { inherit pkgs lib; }
+        );
+        languagesConfig = (pkgs.formats.toml { }).generate "languages.config.toml" (
+          import ./languages.nix { inherit pkgs lib; }
+        );
 
         runtime = pkgs.runCommand "helix-runtime" { } ''
           mkdir -p $out
